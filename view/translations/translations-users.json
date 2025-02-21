@@ -1,0 +1,12 @@
+{
+    "en": {
+        "LEGAL_ENTITY": "Legal Entity",
+        "NATURAL_PERSON": "Natural Person",
+        "DEFAULT": "Default"
+    },
+    "pt": {
+        "LEGAL_ENTITY": "Pessoa Jurídica",
+        "NATURAL_PERSON": "Pessoa Física",
+        "DEFAULT": "Padrão"
+    }
+}

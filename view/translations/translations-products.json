@@ -3,6 +3,8 @@
         "AVAILABLE": "Available",
         "SOLD": "Sold",
         "PAUSED": "Paused",
+        "CREATED": "Created",
+        "DELETED": "Deleted",
         "REAL_ESTATE": "Real Estate",
         "CARS_AND_PARTS": "Autos and Parts",
         "HOME_DECORATION_AND_UTENSILS": "Home, Decoration, and Utensils",
@@ -15,7 +17,8 @@
         "JOBS": "Jobs",
         "BABY_ITEMS": "Baby Items",
         "PETS": "Pets",
-        "MUSIC_AND_HOBBIES": "Music and Hobbies"
+        "MUSIC_AND_HOBBIES": "Music and Hobbies",
+        "DEFAULT": "Select the Category"
     },
     "pt": {
         "AVAILABLE": "Disponível",
@@ -33,6 +36,7 @@
         "JOBS": "Empregos",
         "BABY_ITEMS": "Artigos Infantis",
         "PETS": "Animais de Estimação",
-        "MUSIC_AND_HOBBIES": "Música e Hobbies"
+        "MUSIC_AND_HOBBIES": "Música e Hobbies",
+        "DEFAULT": "Selecione a Categoria"
     }
 }

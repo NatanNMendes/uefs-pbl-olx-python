@@ -4,6 +4,8 @@ class ProductStatus(Enum):
     AVAILABLE = "AVAILABLE"
     SOLD = "SOLD"
     PAUSED = "PAUSED"
+    CREATED = "CREATED"
+    DELETED = "DELETED"
 
 class ProductCategory(Enum):
     REAL_ESTATE = "REAL_ESTATE"
@@ -19,3 +21,4 @@ class ProductCategory(Enum):
     BABY_ITEMS = "BABY_ITEMS"
     PETS = "PETS"
     MUSIC_AND_HOBBIES = "MUSIC_AND_HOBBIES"
+    DEFALUT = "DEFAULT"
