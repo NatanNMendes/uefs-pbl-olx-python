@@ -1,0 +1,38 @@
+{
+    "en": {
+        "AVAILABLE": "Available",
+        "SOLD": "Sold",
+        "PAUSED": "Paused",
+        "REAL_ESTATE": "Real Estate",
+        "CARS_AND_PARTS": "Autos and Parts",
+        "HOME_DECORATION_AND_UTENSILS": "Home, Decoration, and Utensils",
+        "CONSTRUCTION_MATERIALS_AND_GARDEN": "Construction Materials and Garden",
+        "ELECTRONICS_AND_CELL_PHONES": "Electronics and Cell Phones",
+        "FASHION_AND_BEAUTY": "Fashion and Beauty",
+        "SPORTS_AND_LEISURE": "Sports and Leisure",
+        "AGRICULTURE_AND_INDUSTRY": "Agriculture and Industry",
+        "SERVICES": "Services",
+        "JOBS": "Jobs",
+        "BABY_ITEMS": "Baby Items",
+        "PETS": "Pets",
+        "MUSIC_AND_HOBBIES": "Music and Hobbies"
+    },
+    "pt": {
+        "AVAILABLE": "Disponível",
+        "SOLD": "Vendido",
+        "PAUSED": "Pausado",
+        "REAL_ESTATE": "Imóveis",
+        "CARS_AND_PARTS": "Autos e Peças",
+        "HOME_DECORATION_AND_UTENSILS": "Casa, Decoração e Utensílios",
+        "CONSTRUCTION_MATERIALS_AND_GARDEN": "Materiais de Construção e Jardim",
+        "ELECTRONICS_AND_CELL_PHONES": "Eletrônicos e Celulares",
+        "FASHION_AND_BEAUTY": "Moda e Beleza",
+        "SPORTS_AND_LEISURE": "Esporte e Lazer",
+        "AGRICULTURE_AND_INDUSTRY": "Agro e Indústria",
+        "SERVICES": "Serviços",
+        "JOBS": "Empregos",
+        "BABY_ITEMS": "Artigos Infantis",
+        "PETS": "Animais de Estimação",
+        "MUSIC_AND_HOBBIES": "Música e Hobbies"
+    }
+}
