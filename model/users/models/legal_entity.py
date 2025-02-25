@@ -1,4 +1,4 @@
-from users import Users
+from model.users.models.users import Users
 from utils.users_enum import *
 
 class LegalEntity(Users):

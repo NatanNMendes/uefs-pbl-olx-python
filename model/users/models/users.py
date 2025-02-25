@@ -1,18 +1,20 @@
 from abc import ABC, abstractmethod
 from utils.users_enum import *
 from utils.location import Location
-from product.product import Product
+from model.product.models.product import Product
 from product.utils.product_enum import ProductCategory
+import bcrypt
 
 class Users(ABC):
     id_counter = 1
 
-    def __init__(self, name: str, user_name: str, email: str, vat: int, age: int, postal_code: str):
+    def __init__(self, name: str, user_name: str, password: str, email: str, vat: int, age: int, postal_code: str):
         self.id: int = Users.id_counter
         Users.id_counter += 1
         self.name: str = name
         self.user_name: str = user_name
         self.email: str = email
+        self.password: bytes = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         self.vat: int = vat
         self.age: int = age
         self.location: Location = Location(postal_code) 
@@ -20,6 +22,17 @@ class Users(ABC):
         self.cart: list[Product] = []
         self.wishlist: list[Product] = []
         self.my_products: list[Product] = []
+
+    # Quando o usuário adiciona à wishlist:
+    def add_to_wishlist(user, product):
+        user.wishlist.append(product)
+        product.register(user)  # usuário é registrado como observador
+
+    # Quando produto volta ao estoque:
+    def restock_product(product):
+        product.status = ProductStatus.AVAILABLE
+        product.notify(product)
+
 
     def validate_vat(self):
         vat_length = len(str(self.vat))
@@ -29,6 +42,17 @@ class Users(ABC):
         
         if self.user_type == UserType.LEGAL_ENTITY and vat_length != 14:
             raise ValueError("O CNPJ deve ter exatamente 14 dígitos.")
+        
+    def authenticate(self, user_name, password):
+        return self.user_name == user_name and bcrypt.checkpw(password.encode('utf-8'), self.password)
+    
+    def validate_email(email):
+        if "@" not in email or "." not in email.split("@")[-1]:
+            raise ValueError("Email inválido.")
+
+    def validate_password(password):
+        if len(password) < 6:
+            raise ValueError("A senha deve conter ao menos 6 caracteres.")
 
     def add_product(self, product: Product):
         """Adiciona um produto à lista de produtos do usuário"""
