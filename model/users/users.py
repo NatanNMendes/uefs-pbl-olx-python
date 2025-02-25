@@ -72,6 +72,21 @@ class Users(ABC):
         else:
             print("Este produto já está no carrinho.")
 
+    def get_cart_total(self):
+        """Calcula o total de preços dos produtos no carrinho"""
+        total = sum(product.price for product in self.cart)
+        return total
+
+    def view_cart(self):
+        """Exibe os produtos no carrinho"""
+        if not self.cart:
+            print("Seu carrinho está vazio.")
+        else:
+            print("Produtos no carrinho:")
+            for product in self.cart:
+                print(f"- {product.name} - R${product.price:.2f}")
+
+
     def remove_from_cart(self, product: Product):
         """Remove um produto do carrinho"""
         if product in self.cart:
@@ -95,4 +110,30 @@ class Users(ABC):
             print(f"Produto {product.name} removido da lista de desejos.")
         else:
             print("Este produto não está na lista de desejos.")
+
+    def purchase_product(self, product: Product):
+        """Compra um produto do carrinho"""
+        if product in self.cart:
+            self.cart.remove(product)
+            self.purchased_products.append(product)
+            print(f"Produto {product.name} comprado com sucesso.")
+        else:
+            print("Produto não encontrado no carrinho.")
+
+    def checkout(self):
+        """Finaliza a compra de todos os produtos no carrinho"""
+        if not self.cart:
+            print("Seu carrinho está vazio.")
+            return
+
+        total = sum(product.price for product in self.cart)
+        print(f"Valor total: R${total:.2f}")
+        # Aqui pode-se adicionar a verificação de saldo na carteira do usuário
+        self.purchased_products.extend(self.cart)
+        self.cart.clear()
+        print("Compra realizada com sucesso. Produtos comprados: ")
+        for product in self.purchased_products:
+            print(f"- {product.name}")
+
+
 
