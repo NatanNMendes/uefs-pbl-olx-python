@@ -44,3 +44,13 @@ class Product(ABC):
             print(f"Produto {self.name} vendido com sucesso!")
         else:
             print(f"Produto {self.name} não está disponível para venda.")
+
+    def __str__(self):
+        return (f"\n[PRODUTO CADASTRADO]\n"
+                f"ID: {self.id}\n"
+                f"Nome: {self.name}\n"
+                f"Descrição: {self.description}\n"
+                f"Preço: R$ {self.price:.2f}\n"
+                f"Categoria: {self.category.value}\n"
+                f"Status: {self.status.value}\n"
+                f"Criado em: {self.created_at.strftime('%d/%m/%Y %H:%M:%S')}\n")
