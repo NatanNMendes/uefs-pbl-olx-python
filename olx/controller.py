@@ -77,10 +77,10 @@ class Controller:
         name = View.get_input("Nome: ")
         user_name = View.get_input("Nome de usuário: ")
         password = View.get_input("Senha: ")
-        email = View.get_input("Email: ")
+        email = View.get_input("Email (exemplo@exemplo.com): ")
         vat = View.get_input("CPF (11 dígitos) ou CNPJ (14 dígitos): ")
         age = View.get_input("Idade: ")
-        postal_code = View.get_input("CEP: ")
+        postal_code = View.get_input("CEP (0000-000): ")
         balance = View.get_input("Saldo: ")
         # Define o tipo de usuário automaticamente
         if len(vat) == 11:

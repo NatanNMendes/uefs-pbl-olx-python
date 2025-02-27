@@ -36,7 +36,8 @@ class UserObserver:
         self.user = user
 
     def update(self, product):
-        print(f"Olá {self.user.user_name}, o produto '{product.name}' agora está disponível!")
+        msn = f"Olá {self.user.user_name}, o produto '{product.name}' agora está disponível!"
+        self.user.notifications.append(msn)
 
 class ProductObservable:
     def __init__(self):
