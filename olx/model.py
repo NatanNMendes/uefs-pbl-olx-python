@@ -71,14 +71,14 @@ class Product(ProductObservable):
     def update_status(self):
         if self.quantity > 0:
             new_status = ProductStatus.AVAILABLE
+            if self.status != ProductStatus.AVAILABLE:
+                self.notify_observers(self)
         else:
             new_status = ProductStatus.SOLD
 
         self.status = new_status
         print(f"Status do produto '{self.name}' atualizado para {self.status.value}.")
 
-        if self.status == ProductStatus.AVAILABLE:
-            self.notify_observers(self)
 
     def __str__(self):
         return (f"ID: {self.id}\n"
@@ -150,8 +150,6 @@ class Users(ABC):
         self.observer = UserObserver(self)
         self.balance = balance
 
-    def restock_product(self, product: Product):
-        product.update_status(ProductStatus.AVAILABLE)
 
     def validate_vat(self):
         vat_length = len(str(self.vat))
@@ -252,6 +250,8 @@ class Users(ABC):
         if product in self.cart:
             self.cart.remove(product)
             self.purchased_products.append(product)
+            product.quantity -= 1
+            product.update_status()
             print(f"Produto {product.name} comprado com sucesso.")
         else:
             print("Produto não encontrado no carrinho.")

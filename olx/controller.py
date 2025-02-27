@@ -3,9 +3,16 @@ from model import UserType, Product, Users, ProductStatus, ProductCategory
 
 class Controller:
     def __init__(self):
-        self.users = []      # Lista de usuários registrados
-        self.products = []   # Lista global de produtos
+        self.users = [] 
+        self.products = []
         self.current_user = None
+
+    def find_product_by_name(self, search_term):
+        return [product for product in self.products if search_term.lower() in product.name.lower()]
+    
+    def find_product_by_category(self, search_term):
+        return [product for product in self.products if search_term.lower() in product.category.value.lower()]
+
 
     def display_banner(self):
         banner = r"""
@@ -212,18 +219,26 @@ class Controller:
 
     def add_product_to_cart(self):
         View.display_message("\n--- Adicionar Produto ao Carrinho ---")
-        product_id = View.get_input("Digite o ID do produto: ")
-        try:
-            product_id = int(product_id)
-        except ValueError:
-            View.display_message("ID inválido!")
+        search_type = View.get_input("Deseja buscar por nome ou categoria? (Digite 'nome' ou 'categoria'): ").strip().lower()
+
+        if search_type == 'nome':
+            search_term = View.get_input("Digite o nome do produto que deseja adicionar ao carrinho: ").strip()
+            products = self.find_product_by_name(search_term)
+        elif search_type == 'categoria':
+            search_term = View.get_input("Digite a categoria do produto que deseja Digite o nome do produto que deseja adicionar ao carrinho:: ").strip()
+            products = self.find_product_by_category(search_term)
+        else:
+            View.display_message("Opção inválida! Escolha 'nome' ou 'categoria'.")
+            return
+        if not products:
+            View.display_message("Nenhum produto encontrado.")
             return
         
-        product = next((p for p in self.products if p.id == product_id), None)
-        if product:
-            self.current_user.add_to_cart(product)
-        else:
-            View.display_message("Produto não encontrado.")
+        for product in products:
+            if product:
+                self.current_user.add_to_cart(product)
+            else:
+                View.display_message("Produto não encontrado.")
 
     def view_cart(self):
         View.display_message("\n--- Carrinho de Compras ---")
@@ -231,18 +246,28 @@ class Controller:
 
     def remove_product_from_cart(self):
         View.display_message("\n--- Remover Produto do Carrinho ---")
-        product_id = View.get_input("Digite o ID do produto a remover: ")
-        try:
-            product_id = int(product_id)
-        except ValueError:
-            View.display_message("ID inválido!")
-            return
         
-        product = next((p for p in self.current_user.cart if p.id == product_id), None)
-        if product:
-            self.current_user.remove_from_cart(product)
+        search_type = View.get_input("Deseja buscar por nome ou categoria? (Digite 'nome' ou 'categoria'): ").strip().lower()
+
+        if search_type == 'nome':
+            search_term = View.get_input("Digite o nome do produto que deseja remover do carrinho: ").strip()
+            products = self.find_product_by_name(search_term)
+        elif search_type == 'categoria':
+            search_term = View.get_input("Digite a categoria do produto que deseja remover do carrinho: ").strip()
+            products = self.find_product_by_category(search_term)
         else:
-            View.display_message("Produto não encontrado no carrinho.")
+            View.display_message("Opção inválida! Escolha 'nome' ou 'categoria'.")
+            return
+
+        if not products:
+            View.display_message("Nenhum produto encontrado.")
+            return
+                
+        for product in products:
+            if product:
+                self.current_user.remove_from_cart(product)
+            else:
+                View.display_message("Produto não encontrado no carrinho.")
 
     def checkout(self):
         View.display_message("\n--- Checkout ---")
@@ -260,9 +285,7 @@ class Controller:
 
             for product in self.current_user.cart:
                 self.current_user.purchase_product(product)
-
-                product.quantity -= 1
-
+                
                 if product.quantity <= 0:
                     View.display_message(f"Produto {product.name} esgotado.")
             self.current_user.clear_cart()
@@ -276,18 +299,27 @@ class Controller:
 
     def add_to_wishlist(self):
         View.display_message("\n--- Adicionar Produto à Wishlist ---")
-        product_id = View.get_input("Digite o ID do produto: ")
-        try:
-            product_id = int(product_id)
-        except ValueError:
-            View.display_message("ID inválido!")
+        search_type = View.get_input("Deseja buscar por nome ou categoria? (Digite 'nome' ou 'categoria'): ").strip().lower()
+
+        if search_type == 'nome':
+            search_term = View.get_input("Digite o nome do produto que deseja adicionar a lista de desejos: ").strip()
+            products = self.find_product_by_name(search_term)
+        elif search_type == 'categoria':
+            search_term = View.get_input("Digite a categoria do produto que deseja deseja adicionar a lista de desejos: ").strip()
+            products = self.find_product_by_category(search_term)
+        else:
+            View.display_message("Opção inválida! Escolha 'nome' ou 'categoria'.")
+            return
+
+        if not products:
+            View.display_message("Nenhum produto encontrado.")
             return
         
-        product = next((p for p in self.products if p.id == product_id), None)
-        if product:
-            self.current_user.add_to_wishlist(product)
-        else:
-            View.display_message("Produto não encontrado.")
+        for product in products:
+            if product:
+                self.current_user.add_to_wishlist(product)
+            else:
+                View.display_message("Produto não encontrado.")
 
     def edit_product(self):
         View.display_message("\n--- Editar Produto ---")
@@ -297,16 +329,21 @@ class Controller:
         View.display_message("Seus produtos:")
         for product in self.current_user.my_products:
             View.display_message(str(product))
-        product_id = View.get_input("Digite o ID do produto a editar: ")
-        try:
-            product_id = int(product_id)
-        except ValueError:
-            View.display_message("ID inválido!")
-            return
         
-        product = next((p for p in self.current_user.my_products if p.id == product_id), None)
-        if not product:
-            View.display_message("Produto não encontrado.")
+        search_type = View.get_input("Deseja buscar por nome ou categoria? (Digite 'nome' ou 'categoria'): ").strip().lower()
+
+        if search_type == 'nome':
+            search_term = View.get_input("Digite o nome do produto que deseja editar: ").strip()
+            products = self.find_product_by_name(search_term)
+        elif search_type == 'categoria':
+            search_term = View.get_input("Digite a categoria do produto que deseja editar: ").strip()
+            products = self.find_product_by_category(search_term)
+        else:
+            View.display_message("Opção inválida! Escolha 'nome' ou 'categoria'.")
+            return
+
+        if not products:
+            View.display_message("Nenhum produto encontrado.")
             return
         
         new_name = View.get_input("Novo nome (deixe em branco para não alterar): ")
@@ -335,21 +372,30 @@ class Controller:
         View.display_message("Seus produtos:")
         for product in self.current_user.my_products:
             View.display_message(str(product))
-        product_id = View.get_input("Digite o ID do produto a remover: ")
-        try:
-            product_id = int(product_id)
-        except ValueError:
-            View.display_message("ID inválido!")
-            return
-        
-        product = next((p for p in self.current_user.my_products if p.id == product_id), None)
-        if product:
-            self.current_user.remove_product(product)
-            if product in self.products:
-                self.products.remove(product)
-            View.display_message("Produto removido com sucesso.")
-        else:
-            View.display_message("Produto não encontrado.")
+            search_type = View.get_input("Deseja buscar por nome ou categoria? (Digite 'nome' ou 'categoria'): ").strip().lower()
+
+            if search_type == 'nome':
+                search_term = View.get_input("Digite o nome do produto que deseja remover: ").strip()
+                products = self.find_product_by_name(search_term)
+            elif search_type == 'categoria':
+                search_term = View.get_input("Digite a categoria do produto que deseja remover: ").strip()
+                products = self.find_product_by_category(search_term)
+            else:
+                View.display_message("Opção inválida! Escolha 'nome' ou 'categoria'.")
+                return
+
+            if not products:
+                View.display_message("Nenhum produto encontrado.")
+                return
+            
+            for product in products:
+                if product:
+                    self.current_user.remove_product(product)
+                    if product in self.products:
+                        self.products.remove(product)
+                    View.display_message("Produto removido com sucesso.")
+                else:
+                    View.display_message("Produto não encontrado.")
 
     def restock_product(self):
         View.display_message("\n--- Restocar Produto ---")
@@ -361,33 +407,44 @@ class Controller:
         for product in self.current_user.my_products:
             View.display_message(str(product))
         
-        product_id = View.get_input("Digite o ID do produto que deseja restocar: ")
-        try:
-            product_id = int(product_id)
-        except ValueError:
-            View.display_message("ID inválido!")
+        search_type = View.get_input("Deseja buscar por nome ou categoria? (Digite 'nome' ou 'categoria'): ").strip().lower()
+
+        if search_type == 'nome':
+            search_term = View.get_input("Digite o nome do produto que deseja restocar: ").strip()
+            products = self.find_product_by_name(search_term)
+        elif search_type == 'categoria':
+            search_term = View.get_input("Digite a categoria do produto que deseja restocar: ").strip()
+            products = self.find_product_by_category(search_term)
+        else:
+            View.display_message("Opção inválida! Escolha 'nome' ou 'categoria'.")
+            return
+
+        if not products:
+            View.display_message("Nenhum produto encontrado.")
             return
         
-        product = next((p for p in self.current_user.my_products if p.id == product_id), None)
-        if product:
-            if product.status != ProductStatus.AVAILABLE:
-                # Solicitar a quantidade a ser adicionada ao estoque
+        for product in products:
+            if product:
                 quantity_input = View.get_input("Digite a quantidade que deseja restocar: ")
                 try:
                     quantity_to_add = int(quantity_input)
                     if quantity_to_add <= 0:
                         View.display_message("A quantidade para restocar deve ser maior que zero.")
                         return
+                    
                     product.quantity += quantity_to_add  # Adiciona a quantidade ao produto
-                    product.update_status(ProductStatus.AVAILABLE)
+                    product.update_status()  # Atualiza o status com a nova quantidade
+                    
                     View.display_message(f"Produto restocado! Quantidade agora é {product.quantity}.")
-                    View.display_message("Notificação enviada aos interessados!")
+                    
+                    if product.status == ProductStatus.AVAILABLE:
+                        View.display_message("Notificação enviada aos interessados!")
+
                 except ValueError:
-                    View.display_message("Quantidade inválida!")
+                    View.display_message("Quantidade inválida! Digite um número válido.")
             else:
-                View.display_message("O produto já está disponível.")
-        else:
-            View.display_message("Produto não encontrado.")
+                View.display_message("Produto não encontrado.")
+
 
     def deposit(self):
         View.display_message("\n--- Depósito ---")
