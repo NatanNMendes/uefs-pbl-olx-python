@@ -1,5 +1,5 @@
 from view import View
-from model import UserFactory, UserType, Product, Users
+from model import UserType, Product, Users, ProductStatus, Location
 
 class Controller:
     def __init__(self):
@@ -27,9 +27,18 @@ class Controller:
                 else:
                     View.display_message("Opção inválida!")
             else:
-                # Enquanto usuário estiver logado, exibe repetidamente o menu do usuário
                 while self.current_user:
                     self.user_menu()
+
+    def display_notifications(self):
+        # Exibe as notificações armazenadas no usuário atual, se houver.
+        # É necessário que o objeto usuário tenha o atributo "notifications" (uma lista).
+        if hasattr(self.current_user, "notifications") and self.current_user.notifications:
+            View.display_message("\n--- Notificações ---")
+            for notification in self.current_user.notifications:
+                View.display_message(notification)
+            # Após exibir, limpa as notificações.
+            self.current_user.notifications.clear()
 
     def register_user(self):
         View.display_message("\n--- Registro de Usuário ---")
@@ -41,32 +50,32 @@ class Controller:
         age = View.get_input("Idade: ")
         postal_code = View.get_input("CEP: ")
 
-        # Escolher tipo de usuário
-        View.display_message("Tipo de usuário:")
-        View.display_message("1. Pessoa Física")
-        View.display_message("2. Pessoa Jurídica")
-        tipo = View.get_input("Escolha o tipo (1 ou 2): ")
-
-        if tipo == "1":
+        # Define o tipo de usuário automaticamente
+        if len(vat) == 11:
             user_type = UserType.NATURAL_PERSON
-        elif tipo == "2":
+            View.display_message("Tipo de usuário: Pessoa Física")
+        elif len(vat) == 14:
             user_type = UserType.LEGAL_ENTITY
+            View.display_message("Tipo de usuário: Pessoa Jurídica")
         else:
-            View.display_message("Tipo inválido. Registro cancelado.")
+            View.display_message("Número de CPF ou CNPJ inválido. Registro cancelado.")
             return
 
         try:
-            age = int(age)
-            vat = int(vat)
-            user = UserFactory.create_user(user_type, name, user_name, password, email, vat, age, postal_code)
+            user = Users(name, user_name, password, email, int(vat), int(age), postal_code)
+            user.user_type = user_type
+            # Adiciona uma lista de notificações para o usuário
+            user.notifications = []
+            user.location.fetch_data()
             user.validate_vat()
-            Users.validate_email(email)
-            Users.validate_password(password)
+
             self.users.append(user)
             View.display_message("Usuário registrado com sucesso!")
+            print(user)
+        except ValueError as e:
+            View.display_message(f"Erro: {e}")
         except Exception as e:
-            View.display_message(f"Erro no registro: {e}")
-        View.pause()
+            View.display_message(f"Ocorreu um erro: {e}")
 
     def login(self):
         View.display_message("\n--- Login ---")
@@ -77,6 +86,9 @@ class Controller:
         for user in self.users:
             if user.authenticate(user_name, password):
                 self.current_user = user
+                # Certifica-se de que o usuário possui o atributo de notificações
+                if not hasattr(self.current_user, "notifications"):
+                    self.current_user.notifications = []
                 found = True
                 break
         if found:
@@ -86,6 +98,9 @@ class Controller:
         View.pause()
 
     def user_menu(self):
+        # Exibe as notificações (se houver) antes do menu de usuário
+        self.display_notifications()
+
         options = {
             "1": "Adicionar Produto",
             "2": "Listar Produtos",
@@ -96,7 +111,8 @@ class Controller:
             "7": "Adicionar Produto à Wishlist",
             "8": "Editar Produto",
             "9": "Remover Produto (meus produtos)",
-            "10": "Logout"
+            "10": "Logout",
+            "11": "Restocar Produto"  # Nova opção para restocar e notificar
         }
         View.display_menu("Menu do Usuário", options)
         choice = View.get_input("Escolha uma opção: ")
@@ -120,6 +136,8 @@ class Controller:
             self.remove_user_product()
         elif choice == "10":
             self.logout()
+        elif choice == "11":
+            self.restock_product()
         else:
             View.display_message("Opção inválida!")
         View.pause()
@@ -135,7 +153,6 @@ class Controller:
             View.display_message("Preço inválido!")
             return
         
-        # Cria o produto; aqui a categoria padrão definida no modelo é utilizada
         product = Product(name, description, price)
         self.products.append(product)
         self.current_user.add_product(product)
@@ -232,10 +249,12 @@ class Controller:
             except ValueError:
                 View.display_message("Preço inválido!")
                 return
-        self.current_user.edit_product(product, 
-                                         name=new_name if new_name.strip() else None,
-                                         price=new_price,
-                                         description=new_description if new_description.strip() else None)
+        self.current_user.edit_product(
+            product,
+            name=new_name if new_name.strip() else None,
+            price=new_price,
+            description=new_description if new_description.strip() else None
+        )
         View.display_message("Produto atualizado.")
 
     def remove_user_product(self):
@@ -256,10 +275,36 @@ class Controller:
         product = next((p for p in self.current_user.my_products if p.id == product_id), None)
         if product:
             self.current_user.remove_product(product)
-            # Opcional: remover também da lista global
             if product in self.products:
                 self.products.remove(product)
             View.display_message("Produto removido com sucesso.")
+        else:
+            View.display_message("Produto não encontrado.")
+
+    def restock_product(self):
+        View.display_message("\n--- Restocar Produto ---")
+        if not self.current_user.my_products:
+            View.display_message("Você não tem produtos cadastrados para restocar.")
+            return
+        
+        View.display_message("Seus produtos:")
+        for product in self.current_user.my_products:
+            View.display_message(str(product))
+        
+        product_id = View.get_input("Digite o ID do produto que deseja restocar: ")
+        try:
+            product_id = int(product_id)
+        except ValueError:
+            View.display_message("ID inválido!")
+            return
+        
+        product = next((p for p in self.current_user.my_products if p.id == product_id), None)
+        if product:
+            if product.status != ProductStatus.AVAILABLE:
+                product.update_status(ProductStatus.AVAILABLE)
+                View.display_message("Produto restocado e notificação enviada aos interessados!")
+            else:
+                View.display_message("O produto já está disponível.")
         else:
             View.display_message("Produto não encontrado.")
 

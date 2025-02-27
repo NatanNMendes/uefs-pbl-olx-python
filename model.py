@@ -77,6 +77,14 @@ class Product(ProductObservable):
         if new_status == ProductStatus.AVAILABLE:
             self.notify_observers(self)
 
+    def __str__(self):
+        return (f"ID: {self.id}\n"
+                f"Nome: {self.name}\n"
+                f"Preço: R${self.price:.2f}\n"
+                f"Descrição: {self.description}\n"
+                f"Categoria: {self.category.name}\n"
+                f"Status: {self.status.name}")
+
 # Classe para obter dados da localização via CEP
 class Location:
     def __init__(self, cep):
@@ -84,7 +92,6 @@ class Location:
         self.data = None
     
     def fetch_data(self):
-        # Formata o CEP (remove caracteres não numéricos)
         formatted_cep = self.cep.replace("-", "").strip()
         url = f"https://viacep.com.br/ws/{formatted_cep}/json/"
         response = requests.get(url)
@@ -97,9 +104,15 @@ class Location:
             raise Exception("Erro na requisição da API")
     
     def get_address(self):
+        # Sempre retorna um dicionário
         if not self.data:
-            return "Informação não disponível."
-        
+            return {
+                "cep": "Informação não disponível",
+                "logradouro": "Informação não disponível",
+                "bairro": "Informação não disponível",
+                "cidade": "Informação não disponível",
+                "estado": "Informação não disponível"
+            }
         return {
             "cep": self.data.get("cep"),
             "logradouro": self.data.get("logradouro"),
@@ -107,6 +120,16 @@ class Location:
             "cidade": self.data.get("localidade"),
             "estado": self.data.get("uf")
         }
+    
+    def __str__(self):
+        address = self.get_address()
+        return (f"CEP: {self.cep}\n"
+                f"Logradouro: {address.get('logradouro', 'N/A')}\n"
+                f"Bairro: {address.get('bairro', 'N/A')}\n"
+                f"Cidade: {address.get('cidade', 'N/A')}\n"
+                f"Estado: {address.get('estado', 'N/A')}")
+
+
 
 # Classes de Usuários
 class Users(ABC):
@@ -241,6 +264,17 @@ class Users(ABC):
         print("Compra realizada com sucesso. Produtos comprados:")
         for product in self.purchased_products:
             print(f"- {product.name}")
+
+    def __str__(self):
+        return (f"ID: {self.id}\n"
+                f"Nome: {self.name}\n"
+                f"Usuário: {self.user_name}\n"
+                f"Email: {self.email}\n"
+                f"Idade: {self.age}\n"
+                f"CPF/CNPJ: {self.vat}\n"
+                f"Localização: {self.location}\n"
+                f"Tipo de usuário: {self.user_type}")
+
 
 class LegalEntity(Users):
     def __init__(self, name, user_name, password, email, vat, age, postal_code):
