@@ -1,11 +1,41 @@
 from view import View
 from model import UserType, Product, Users, ProductStatus, Location
+import time
+import os
 
 class Controller:
     def __init__(self):
         self.users = []      # Lista de usuários registrados
         self.products = []   # Lista global de produtos
         self.current_user = None
+
+    def display_banner(self):
+        banner = r"""
+                              @@@@@@@                                   
+                              @@@@@@@@                                  
+                              @@@@@@@@                                  
+                              @@@@@@@@                                  
+        @@@@@@@@@@@           @@@@@@@@           @@               @@    
+     @@@@@@@@@@@@@@@@@        @@@@@@@@         @@@@@@           @@@@@@  
+   @@@@@@@@@@@@@@@@@@@@@      @@@@@@@@       @@@@@@@@@@       @@@@@@@@@@
+  @@@@@@@@@@@@@@@@@@@@@@@@    @@@@@@@@        @@@@@@@@@@     @@@@@@@@@@ 
+ @@@@@@@@@        @@@@@@@@@   @@@@@@@@         @@@@@@@@@@@ @@@@@@@@@@   
+@@@@@@@@           @@@@@@@@   @@@@@@@@           @@@@@@@@@@@@@@@@@@@    
+@@@@@@@@            @@@@@@@   @@@@@@@@@@@@@@@@@@   @@@@@@@@@@@@@@@      
+@@@@@@@             @@@@@@@@  @@@@@@@@@@@@@@@@@@    @@@@@@@@@@@@        
+@@@@@@@             @@@@@@@@  @@@@@@@@@@@@@@@@@@     @@@@@@@@@@@        
+@@@@@@@@            @@@@@@@@  @@@@@@@@@@@@@@@@@@   @@@@@@@@@@@@@@@      
+@@@@@@@@           @@@@@@@@                      @@@@@@@@@@@@@@@@@@@    
+ @@@@@@@@@        @@@@@@@@@                    @@@@@@@@@@@ @@@@@@@@@@   
+  @@@@@@@@@@@@@@@@@@@@@@@@                    @@@@@@@@@@     @@@@@@@@@@ 
+   @@@@@@@@@@@@@@@@@@@@@                    @@@@@@@@@@@       @@@@@@@@@@
+     @@@@@@@@@@@@@@@@@                       @@@@@@@@          @@@@@@@@@
+       @@@@@@@@@@@@@                           @@@@@             @@@@@  
+            """
+        
+        View.display_message(banner)
+        View.display_message("Bem-vindo(a) ao OLX!")
+        self.run()
 
     def run(self):
         while True:
@@ -49,7 +79,7 @@ class Controller:
         vat = View.get_input("CPF (11 dígitos) ou CNPJ (14 dígitos): ")
         age = View.get_input("Idade: ")
         postal_code = View.get_input("CEP: ")
-
+        balance = View.get_input("Saldo: ")
         # Define o tipo de usuário automaticamente
         if len(vat) == 11:
             user_type = UserType.NATURAL_PERSON
@@ -62,7 +92,7 @@ class Controller:
             return
 
         try:
-            user = Users(name, user_name, password, email, int(vat), int(age), postal_code)
+            user = Users(name, user_name, password, email, int(vat), int(age), postal_code, float(balance))
             user.user_type = user_type
             # Adiciona uma lista de notificações para o usuário
             user.notifications = []
@@ -147,13 +177,14 @@ class Controller:
         name = View.get_input("Nome do produto: ")
         description = View.get_input("Descrição do produto: ")
         price_input = View.get_input("Preço do produto: ")
+        quantity = View.get_input("Quantidade: ")
         try:
             price = float(price_input)
         except ValueError:
             View.display_message("Preço inválido!")
             return
         
-        product = Product(name, description, price)
+        product = Product(name, description, price, quantity)
         self.products.append(product)
         self.current_user.add_product(product)
         View.display_message("Produto adicionado com sucesso!")
@@ -202,7 +233,28 @@ class Controller:
 
     def checkout(self):
         View.display_message("\n--- Checkout ---")
-        self.current_user.checkout()
+
+        if not self.current_user.cart:
+            View.display_message("O carrinho está vazio. Adicione produtos antes de realizar o checkout.")
+            return
+
+        total_price = sum([product.price for product in self.current_user.cart])
+
+        View.display_message(f"Total a pagar: R${total_price:.2f}")
+
+        if self.current_user.balance >= total_price:
+            self.current_user.balance -= total_price
+
+            for product in self.current_user.cart:
+                self.current_user.purchase_product(product)
+
+            self.current_user.clear_cart()
+
+            View.display_message(f"Compra realizada com sucesso! Seu novo saldo é R${self.current_user.balance:.2f}")
+        else:
+            View.display_message("Saldo insuficiente para realizar a compra.")
+    
+    View.pause()
 
     def add_to_wishlist(self):
         View.display_message("\n--- Adicionar Produto à Wishlist ---")
@@ -314,4 +366,5 @@ class Controller:
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run()
+    controller.display_banner()
+

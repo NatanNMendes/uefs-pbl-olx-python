@@ -8,6 +8,7 @@ class View:
         print(f"\n=== {title} ===")
         for key, value in options.items():
             print(f"{key}. {value}")
+            
     
     @staticmethod
     def get_input(prompt: str) -> str:

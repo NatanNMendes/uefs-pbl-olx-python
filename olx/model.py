@@ -31,7 +31,7 @@ class ProductCategory(Enum):
     BABY_ITEMS = "BABY_ITEMS"
     PETS = "PETS"
     MUSIC_AND_HOBBIES = "MUSIC_AND_HOBBIES"
-    DEFALUT = "DEFAULT"
+    DEFAULT = "DEFAULT"
 
 # Observer classes
 class UserObserver:
@@ -61,7 +61,7 @@ class ProductObservable:
 class Product(ProductObservable):
     id_counter = 1
 
-    def __init__(self, name: str, price: float, description: str, category: ProductCategory = ProductCategory.DEFALUT, status: ProductStatus = ProductStatus.CREATED):
+    def __init__(self, name: str, description: str, price: float, quantity: int, category: ProductCategory = ProductCategory.DEFAULT, status: ProductStatus = ProductStatus.CREATED):
         super().__init__()
         self.id = Product.id_counter
         Product.id_counter += 1
@@ -70,6 +70,7 @@ class Product(ProductObservable):
         self.description = description
         self.category = category
         self.status = status
+        self.quantity = quantity
 
     def update_status(self, new_status: ProductStatus):
         self.status = new_status
@@ -80,10 +81,12 @@ class Product(ProductObservable):
     def __str__(self):
         return (f"ID: {self.id}\n"
                 f"Nome: {self.name}\n"
-                f"Preço: R${self.price:.2f}\n"
+                f"Preço: {float(self.price):.2f}\n"
+                f"Quantidade: {int(self.quantity)}\n"
                 f"Descrição: {self.description}\n"
                 f"Categoria: {self.category.name}\n"
                 f"Status: {self.status.name}")
+
 
 # Classe para obter dados da localização via CEP
 class Location:
@@ -135,7 +138,7 @@ class Location:
 class Users(ABC):
     id_counter = 1
 
-    def __init__(self, name: str, user_name: str, password: str, email: str, vat: int, age: int, postal_code: str):
+    def __init__(self, name: str, user_name: str, password: str, email: str, vat: int, age: int, postal_code: str, balance: float):
         self.id: int = Users.id_counter
         Users.id_counter += 1
         self.name: str = name
@@ -150,6 +153,7 @@ class Users(ABC):
         self.wishlist: list[Product] = []
         self.my_products: list[Product] = []
         self.observer = UserObserver(self)
+        self.balance = balance
 
     def restock_product(self, product: Product):
         product.update_status(ProductStatus.AVAILABLE)
@@ -222,6 +226,10 @@ class Users(ABC):
             for product in self.cart:
                 print(f"- {product.name} - R${product.price:.2f}")
 
+    def clear_cart(self):
+        self.cart.clear()
+        print("Carrinho limpo com sucesso!")
+
     def remove_from_cart(self, product: Product):
         if product in self.cart:
             self.cart.remove(product)
@@ -253,17 +261,7 @@ class Users(ABC):
         else:
             print("Produto não encontrado no carrinho.")
 
-    def checkout(self):
-        if not self.cart:
-            print("Seu carrinho está vazio.")
-            return
-        total = sum(product.price for product in self.cart)
-        print(f"Valor total: R${total:.2f}")
-        self.purchased_products.extend(self.cart)
-        self.cart.clear()
-        print("Compra realizada com sucesso. Produtos comprados:")
-        for product in self.purchased_products:
-            print(f"- {product.name}")
+    
 
     def __str__(self):
         return (f"ID: {self.id}\n"
