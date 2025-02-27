@@ -1,7 +1,5 @@
 from view import View
-from model import UserType, Product, Users, ProductStatus, Location
-import time
-import os
+from model import UserType, Product, Users, ProductStatus, ProductCategory
 
 class Controller:
     def __init__(self):
@@ -61,13 +59,10 @@ class Controller:
                     self.user_menu()
 
     def display_notifications(self):
-        # Exibe as notificações armazenadas no usuário atual, se houver.
-        # É necessário que o objeto usuário tenha o atributo "notifications" (uma lista).
         if hasattr(self.current_user, "notifications") and self.current_user.notifications:
             View.display_message("\n--- Notificações ---")
             for notification in self.current_user.notifications:
                 View.display_message(notification)
-            # Após exibir, limpa as notificações.
             self.current_user.notifications.clear()
 
     def register_user(self):
@@ -94,7 +89,6 @@ class Controller:
         try:
             user = Users(name, user_name, password, email, int(vat), int(age), postal_code, float(balance))
             user.user_type = user_type
-            # Adiciona uma lista de notificações para o usuário
             user.notifications = []
             user.location.fetch_data()
             user.validate_vat()
@@ -116,7 +110,6 @@ class Controller:
         for user in self.users:
             if user.authenticate(user_name, password):
                 self.current_user = user
-                # Certifica-se de que o usuário possui o atributo de notificações
                 if not hasattr(self.current_user, "notifications"):
                     self.current_user.notifications = []
                 found = True
@@ -128,7 +121,6 @@ class Controller:
         View.pause()
 
     def user_menu(self):
-        # Exibe as notificações (se houver) antes do menu de usuário
         self.display_notifications()
 
         options = {
@@ -140,9 +132,10 @@ class Controller:
             "6": "Checkout",
             "7": "Adicionar Produto à Wishlist",
             "8": "Editar Produto",
-            "9": "Remover Produto (meus produtos)",
+            "9": "Remover Produto",
             "10": "Logout",
-            "11": "Restocar Produto"  # Nova opção para restocar e notificar
+            "11": "Restocar Produto",
+            "12": "Depositar",
         }
         View.display_menu("Menu do Usuário", options)
         choice = View.get_input("Escolha uma opção: ")
@@ -168,6 +161,8 @@ class Controller:
             self.logout()
         elif choice == "11":
             self.restock_product()
+        elif choice == "12":
+            self.deposit()
         else:
             View.display_message("Opção inválida!")
         View.pause()
@@ -177,17 +172,35 @@ class Controller:
         name = View.get_input("Nome do produto: ")
         description = View.get_input("Descrição do produto: ")
         price_input = View.get_input("Preço do produto: ")
-        quantity = View.get_input("Quantidade: ")
+        quantity_input = View.get_input("Quantidade: ")
+        
         try:
             price = float(price_input)
+            quantity = int(quantity_input)
         except ValueError:
-            View.display_message("Preço inválido!")
+            View.display_message("Preço ou Quantidade inválidos!")
             return
+
+        View.display_message("\nEscolha a categoria do produto:")
+        for index, category in enumerate(ProductCategory):
+            View.display_message(f"{index + 1}. {category.value}")
+
+        category_choice = View.get_input("Digite o número da categoria: ")
+
+        try:
+            category_choice = int(category_choice) - 1
+            category = list(ProductCategory)[category_choice]
+        except (ValueError, IndexError):
+            View.display_message("Categoria inválida!")
+            return
+
+        product = Product(name, description, price, quantity, category)
         
-        product = Product(name, description, price, quantity)
         self.products.append(product)
         self.current_user.add_product(product)
+        
         View.display_message("Produto adicionado com sucesso!")
+
 
     def list_products(self):
         View.display_message("\n--- Lista de Produtos ---")
@@ -248,11 +261,16 @@ class Controller:
             for product in self.current_user.cart:
                 self.current_user.purchase_product(product)
 
+                product.quantity -= 1
+
+                if product.quantity <= 0:
+                    View.display_message(f"Produto {product.name} esgotado.")
             self.current_user.clear_cart()
 
             View.display_message(f"Compra realizada com sucesso! Seu novo saldo é R${self.current_user.balance:.2f}")
         else:
             View.display_message("Saldo insuficiente para realizar a compra.")
+
     
     View.pause()
 
@@ -353,12 +371,44 @@ class Controller:
         product = next((p for p in self.current_user.my_products if p.id == product_id), None)
         if product:
             if product.status != ProductStatus.AVAILABLE:
-                product.update_status(ProductStatus.AVAILABLE)
-                View.display_message("Produto restocado e notificação enviada aos interessados!")
+                # Solicitar a quantidade a ser adicionada ao estoque
+                quantity_input = View.get_input("Digite a quantidade que deseja restocar: ")
+                try:
+                    quantity_to_add = int(quantity_input)
+                    if quantity_to_add <= 0:
+                        View.display_message("A quantidade para restocar deve ser maior que zero.")
+                        return
+                    product.quantity += quantity_to_add  # Adiciona a quantidade ao produto
+                    product.update_status(ProductStatus.AVAILABLE)
+                    View.display_message(f"Produto restocado! Quantidade agora é {product.quantity}.")
+                    View.display_message("Notificação enviada aos interessados!")
+                except ValueError:
+                    View.display_message("Quantidade inválida!")
             else:
                 View.display_message("O produto já está disponível.")
         else:
             View.display_message("Produto não encontrado.")
+
+    def deposit(self):
+        View.display_message("\n--- Depósito ---")
+        
+        # Solicita o valor a ser depositado
+        deposit_amount_input = View.get_input("Digite o valor a ser depositado: ")
+        
+        try:
+            # Converte o valor para float e valida se é positivo
+            deposit_amount = float(deposit_amount_input)
+            if deposit_amount <= 0:
+                View.display_message("O valor do depósito deve ser maior que zero.")
+                return
+            
+            # Atualiza o saldo do usuário
+            self.current_user.balance += deposit_amount
+            
+            View.display_message(f"Depósito realizado com sucesso! Seu novo saldo é R${self.current_user.balance:.2f}")
+        
+        except ValueError:
+            View.display_message("Valor inválido! Por favor, insira um número válido.")
 
     def logout(self):
         View.display_message(f"Usuário {self.current_user.user_name} deslogado.")

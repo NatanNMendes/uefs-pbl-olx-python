@@ -3,11 +3,9 @@ import requests
 import bcrypt
 from enum import Enum
 
-# Enums
 class UserType(Enum):
     LEGAL_ENTITY = "LEGAL_ENTITY"
     NATURAL_PERSON = "NATURAL_PERSON"
-    ADMIN = "ADMIN"
     DEFAULT = "DEFAULT"
 
 class ProductStatus(Enum):
@@ -33,7 +31,6 @@ class ProductCategory(Enum):
     MUSIC_AND_HOBBIES = "MUSIC_AND_HOBBIES"
     DEFAULT = "DEFAULT"
 
-# Observer classes
 class UserObserver:
     def __init__(self, user):
         self.user = user
@@ -57,11 +54,10 @@ class ProductObservable:
         for observer in self._observers:
             observer.update(product)
 
-# Classe de Produto
 class Product(ProductObservable):
     id_counter = 1
 
-    def __init__(self, name: str, description: str, price: float, quantity: int, category: ProductCategory = ProductCategory.DEFAULT, status: ProductStatus = ProductStatus.CREATED):
+    def __init__(self, name: str, description: str, price: float, quantity: int, category: ProductCategory, status: ProductStatus = ProductStatus.AVAILABLE):
         super().__init__()
         self.id = Product.id_counter
         Product.id_counter += 1
@@ -72,10 +68,16 @@ class Product(ProductObservable):
         self.status = status
         self.quantity = quantity
 
-    def update_status(self, new_status: ProductStatus):
+    def update_status(self):
+        if self.quantity > 0:
+            new_status = ProductStatus.AVAILABLE
+        else:
+            new_status = ProductStatus.SOLD
+
         self.status = new_status
         print(f"Status do produto '{self.name}' atualizado para {self.status.value}.")
-        if new_status == ProductStatus.AVAILABLE:
+
+        if self.status == ProductStatus.AVAILABLE:
             self.notify_observers(self)
 
     def __str__(self):
@@ -87,8 +89,6 @@ class Product(ProductObservable):
                 f"Categoria: {self.category.name}\n"
                 f"Status: {self.status.name}")
 
-
-# Classe para obter dados da localização via CEP
 class Location:
     def __init__(self, cep):
         self.cep = cep
@@ -107,7 +107,6 @@ class Location:
             raise Exception("Erro na requisição da API")
     
     def get_address(self):
-        # Sempre retorna um dicionário
         if not self.data:
             return {
                 "cep": "Informação não disponível",
@@ -131,10 +130,6 @@ class Location:
                 f"Bairro: {address.get('bairro', 'N/A')}\n"
                 f"Cidade: {address.get('cidade', 'N/A')}\n"
                 f"Estado: {address.get('estado', 'N/A')}")
-
-
-
-# Classes de Usuários
 class Users(ABC):
     id_counter = 1
 
@@ -261,8 +256,6 @@ class Users(ABC):
         else:
             print("Produto não encontrado no carrinho.")
 
-    
-
     def __str__(self):
         return (f"ID: {self.id}\n"
                 f"Nome: {self.name}\n"
@@ -273,15 +266,14 @@ class Users(ABC):
                 f"Localização: {self.location}\n"
                 f"Tipo de usuário: {self.user_type}")
 
-
 class LegalEntity(Users):
-    def __init__(self, name, user_name, password, email, vat, age, postal_code):
-        super().__init__(name, user_name, password, email, vat, age, postal_code)
+    def __init__(self, name, user_name, password, email, vat, age, postal_code, balance):
+        super().__init__(name, user_name, password, email, vat, age, postal_code, balance)
         self.user_type = UserType.LEGAL_ENTITY
 
 class NaturalPerson(Users):
-    def __init__(self, name, user_name, password, email, vat, age, postal_code):
-        super().__init__(name, user_name, password, email, vat, age, postal_code)
+    def __init__(self, name, user_name, password, email, vat, age, postal_code, balance):
+        super().__init__(name, user_name, password, email, vat, age, postal_code, balance)
         self.user_type = UserType.NATURAL_PERSON
 
 class UserFactory:
